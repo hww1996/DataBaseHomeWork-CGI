@@ -339,7 +339,7 @@ void queryTest(Request r) {
 	string ans = "";
 	mysql_init(&myCont);
 	unordered_map<string, string> requestData = r.getData();
-	if (mysql_real_connect(&myCont, "localhost", "root", "huangweiwei", "myTest", 3306, NULL, 0)) {
+	if (mysql_real_connect(&myCont, "localhost", "root", "", "myTest", 3306, NULL, 0)) {
 		ans = "connect ok\n";
 		mysql_query(&myCont, "SET NAMES GBK");
 		string qs = "select * from students";
