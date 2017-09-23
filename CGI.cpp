@@ -113,7 +113,24 @@ public:
 		memset(str, 0, len + 1);
 		WideCharToMultiByte(CP_ACP, 0, wstr, -1, str, len, NULL, NULL);
 		if (wstr) delete[] wstr;
-		return str;
+		string ans(str);
+		delete[] str;
+		return ans;
+	}
+
+	string GbkToUtf(const char *gbk) {
+		int len = MultiByteToWideChar(CP_ACP, 0, gbk, -1, NULL, 0);
+		wchar_t *wstr = new wchar_t[len + 1];
+		memset(wstr, 0, len + 1);
+		MultiByteToWideChar(CP_ACP, 0, gbk, -1, wstr, len);
+		len = WideCharToMultiByte(CP_UTF8, 0, wstr, -1, NULL, 0, NULL, NULL);
+		char* str = new char[len + 1];
+		memset(str, 0, len + 1);
+		WideCharToMultiByte(CP_UTF8, 0, wstr, -1, str, len, NULL, NULL);
+		if (wstr) delete[] wstr;
+		string ans(str);
+		delete[] str;
+		return ans;
 	}
 	void upper(string &s) {
 		for (size_t i = 0; i<s.size(); i++)
@@ -339,11 +356,12 @@ void queryTest(Request r) {
 	string ans = "";
 	mysql_init(&myCont);
 	unordered_map<string, string> requestData = r.getData();
+	StringAlgorithm *sa = StringAlgorithm::getStringAlgorithm();
 	if (mysql_real_connect(&myCont, "localhost", "root", "", "myTest", 3306, NULL, 0)) {
 		ans = "connect ok\n";
 		mysql_query(&myCont, "SET NAMES GBK");
 		string qs = "select * from students";
-		qs = qs + " where age=\'" + requestData["fname"] + "\';";
+		qs = qs + " where sex=\'" + requestData["fname"] + "\';";
 		res = mysql_query(&myCont, qs.c_str());
 		if (!res) {
 			result = mysql_store_result(&myCont);
@@ -353,9 +371,8 @@ void queryTest(Request r) {
 					string id = sql_row[0];
 					string sex = sql_row[2];
 					ans = ans + "id:" + sql_row[0] + "\n";
-					ans = ans + "sex:" + sql_row[2] + "\n";
+					ans = ans + "sex:" + sa->GbkToUtf(sql_row[2]) + "\n";
 					cookie.set_cookie("id", id);
-					cookie.set_cookie("sex", sex);
 				}
 			}
 			else {
