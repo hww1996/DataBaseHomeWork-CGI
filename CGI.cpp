@@ -1,15 +1,14 @@
-// CGI.cpp: 定义控制台应用程序的入口点。
-//
-
-#include "stdafx.h"
-#include<fstream>
 #include<iostream>
-#include<cstdlib>
+#include<fstream>
+#include<winsock2.h>
+#include<vector>
+#include<mysql.h>
 #include<string>
 #include<cstring>
-#include<mysql.h>
+#include<cstdio>
+#include<cstdlib>
 #include<unordered_map>
-#include<map>
+#include<unordered_set>
 using namespace std;
 
 
@@ -306,7 +305,7 @@ public:
 		string res = getHeader(content_type, Cookie);
 		string HtmlFile = "", HtmlLine = "";
 		ifstream inputFile;
-		inputFile.open(htmlPath, ios::skipws);
+		inputFile.open(htmlPath);
 		while (getline(inputFile, HtmlLine)) {
 			HtmlFile = HtmlFile + HtmlLine + "\n";
 		}
@@ -386,24 +385,29 @@ void queryTest(Request r) {
 	if (result != NULL)
 		mysql_free_result(result);
 	mysql_close(&myCont);
-	/*cout << "Content-type: text/html\n\n";
-	cout << ans << endl;*/
 	HttpResponseDecrorate::response(ans, "text/html", cookie);
 }
 
 void PostTest(Request r) {
-	/*string HtmlFile = "", HtmlLine = "";
-	ifstream inputFile;
-	inputFile.open("C:\\Users\\Administrator\\Desktop\\cgi\\template\\postTest.html", ios::skipws);
-	while (getline(inputFile, HtmlLine)) {
-		HtmlFile = HtmlFile + HtmlLine + "\r\n";
-	}
-	cout << "Content-type: text/html\n\n" << HtmlFile << endl;*/
 	HttpResponseDecrorate::render("C:\\Users\\Administrator\\Desktop\\cgi\\template\\postTest.html");
 }
 
 void json(Request r) {
 	HttpResponseDecrorate::response("{\"result\":\"ok\",\"name\":\"成龙\"}", "application/json");
+}
+
+void getTest(Request r) {
+	unordered_map<string, string> requestCan = r.getData();
+	if (requestCan.size() == 0) {
+		return HttpResponseDecrorate::response("<b>no get things</b>");
+	}
+	else {
+		string ans = "";
+		for (auto iter = requestCan.begin(); iter != requestCan.end(); ++iter) {
+			ans = ans + StringAlgorithm::getStringAlgorithm()->GbkToUtf(iter->first.c_str()) + "=" + StringAlgorithm::getStringAlgorithm()->GbkToUtf(iter->second.c_str()) + " ";
+		}
+		return HttpResponseDecrorate::response(ans);
+	}
 }
 
 int main()
@@ -417,6 +421,7 @@ int main()
 		{ "/query",queryTest },
 		{"/ptest",PostTest },
 		{"/api",json },
+		{ "/gtest",getTest },
 	};
 	if (urlMapping.find(s) != urlMapping.end()) {
 		urlMapping[s](r);
@@ -428,4 +433,3 @@ int main()
 	}
     return 0;
 }
-
